@@ -2,12 +2,27 @@ var board;
 var score = 0;
 var rows = 4;
 var columns = 4;
+var scoresHistory = [];
+var gameOver = false;
 
 window.onload = function () {
   setGame();
+
+  document.getElementById("closePopup").addEventListener("click", closePopup);
+  document
+    .getElementById("restartButton")
+    .addEventListener("click", restartGame);
 };
 
 function setGame() {
+  score = 0;
+  document.getElementById("score").innerText = score;
+
+  let boardElement = document.getElementById("board");
+  while (boardElement.firstChild) {
+    boardElement.removeChild(boardElement.firstChild);
+  }
+
   board = [
     [0, 0, 0, 0],
     [0, 0, 0, 0],
@@ -58,6 +73,7 @@ document.addEventListener("keyup", (e) => {
     setTwo();
   }
   document.getElementById("score").innerText = score;
+  checkGameOver();
 });
 
 function filterZero(row) {
@@ -157,10 +173,32 @@ function setTwo() {
 }
 
 function hasEmptyTile() {
-  let count = 0;
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < columns; c++) {
       if (board[r][c] == 0) {
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function checkGameOver() {
+  if (!hasEmptyTile() && !canSlide() && !gameOver) {
+    gameOver = true;
+    showGameOverPopup();
+    scoresHistory.push(score);
+    displayScores();
+  }
+}
+
+function canSlide() {
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < columns; c++) {
+      if (c < columns - 1 && board[r][c] === board[r][c + 1]) {
+        return true;
+      }
+      if (r < rows - 1 && board[r][c] === board[r + 1][c]) {
         return true;
       }
     }
@@ -200,6 +238,7 @@ function handleMouseGesture() {
 
   setTwo();
   document.getElementById("score").innerText = score;
+  checkGameOver();
 }
 
 document.addEventListener("touchstart", (e) => {
@@ -234,4 +273,31 @@ function handleGesture() {
 
   setTwo();
   document.getElementById("score").innerText = score;
+  checkGameOver();
+}
+
+function showGameOverPopup() {
+  document.getElementById("finalScore").innerText = score;
+  document.getElementById("gameOverPopup").style.display = "flex";
+}
+
+function closePopup() {
+  document.getElementById("gameOverPopup").style.display = "none";
+}
+
+function restartGame() {
+  closePopup();
+  setGame();
+  gameOver = false;
+}
+
+function displayScores() {
+  let scoresElement = document.getElementById("scores");
+  scoresElement.innerHTML = "";
+  let historyToShow = scoresHistory.slice(-10);
+  historyToShow.forEach((score, index) => {
+    let scoreDiv = document.createElement("div");
+    scoreDiv.innerText = `Gra ${scoresHistory.length - index}: ${score}`;
+    scoresElement.appendChild(scoreDiv);
+  });
 }
